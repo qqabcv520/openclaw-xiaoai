@@ -1,0 +1,34 @@
+{
+  "name": "openclaw-xiaoai",
+  "version": "1.0.0",
+  "description": "小爱音箱 OpenClaw 桥接服务 + Channel Plugin",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "pnpm start",
+    "serve": "fuser -k 4399/tcp 4400/tcp 2>/dev/null; nohup tsx src/index.ts >> server.log 2>&1 & echo $! > .pid && echo \"PID: $(cat .pid)\"",
+    "serve:stop": "if [ -f .pid ]; then kill $(cat .pid) 2>/dev/null; rm .pid; echo 'stopped'; else fuser -k 4399/tcp 2>/dev/null && echo 'stopped' || echo 'not running'; fi",
+    "serve:status": "if [ -f .pid ] && kill -0 $(cat .pid) 2>/dev/null; then echo \"running (PID: $(cat .pid))\"; else echo 'not running'; fi",
+    "serve:log": "tail -f server.log",
+    "serve:install": "sudo cp openclaw.service /etc/systemd/system/ && sudo systemctl daemon-reload && sudo systemctl enable openclaw && echo 'systemd enabled'",
+    "serve:uninstall": "sudo systemctl disable openclaw && sudo rm /etc/systemd/system/openclaw.service && sudo systemctl daemon-reload && echo 'systemd disabled'"
+  },
+  "dependencies": {
+    "@mi-gpt/utils": "1.1.1",
+    "node-edge-tts": "^1.2.10",
+    "sherpa-onnx-node": "^1.12.26",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@mi-gpt/config": "1.1.0",
+    "@types/node": "^22.13.11",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  },
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=18"
+  }
+}

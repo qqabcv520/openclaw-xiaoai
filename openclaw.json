@@ -1,0 +1,38 @@
+{
+  "hooks": {
+    "enabled": true,
+    "token": "your-webhook-token-here",
+    "path": "/hooks",
+    "defaultSessionKey": "hook:xiaoai",
+    "allowRequestSessionKey": true,
+    "allowedSessionKeyPrefixes": ["hook:xiaoai"],
+    "mappings": [
+      {
+        "match": { "path": "xiaoai" },
+        "action": "agent",
+        "agentId": "main",
+        "wakeMode": "now",
+        "name": "XiaoAi",
+        "messageTemplate": "{{message}}",
+        "deliver": true,
+        "channel": "xiaoai"
+      }
+    ]
+  },
+  "channels": {
+    "xiaoai": {
+      "accounts": {
+        "default": {
+          "bridgeUrl": "http://192.168.1.42:4400",
+          "token": "your-notification-token-here",
+          "enabled": true
+        }
+      }
+    }
+  },
+  "plugins": {
+    "load": {
+      "paths": ["./plugin"]
+    }
+  }
+}

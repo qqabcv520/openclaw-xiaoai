@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env
+models/*.onnx
+models/*.model
+server.log
+.pid
+*.pcm
+tmp/

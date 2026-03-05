@@ -1,0 +1,16 @@
+[Unit]
+Description=OpenClaw XiaoAi Bridge Service
+After=network.target
+
+[Service]
+Type=simple
+User=mifan
+WorkingDirectory=/home/mifan/openclaw-xiaoai
+ExecStart=/home/mifan/.nvm/versions/node/v22.14.0/bin/node /home/mifan/.nvm/versions/node/v22.14.0/bin/tsx src/index.ts
+Restart=on-failure
+RestartSec=5
+StandardOutput=append:/home/mifan/openclaw-xiaoai/server.log
+StandardError=append:/home/mifan/openclaw-xiaoai/server.log
+
+[Install]
+WantedBy=multi-user.target

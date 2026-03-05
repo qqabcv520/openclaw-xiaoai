@@ -1,0 +1,11 @@
+{
+  "extends": "@mi-gpt/config/typescript",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  },
+  "include": ["src", "config.ts"],
+  "exclude": ["node_modules", "plugin"]
+}

@@ -1,0 +1,18 @@
+{
+  "name": "openclaw-channel-xiaoai",
+  "version": "1.0.0",
+  "description": "小爱音箱 Channel Plugin for OpenClaw",
+  "type": "module",
+  "main": "index.ts",
+  "openclaw": {
+    "extensions": ["./index.ts"],
+    "channel": {
+      "id": "xiaoai",
+      "label": "XiaoAi Speaker",
+      "selectionLabel": "XiaoAi Speaker (小爱音箱)",
+      "docsPath": "/channels/xiaoai",
+      "blurb": "通过小爱音箱进行语音对话。",
+      "aliases": ["xiaoai", "小爱"]
+    }
+  }
+}
