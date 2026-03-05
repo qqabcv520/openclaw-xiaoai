@@ -12,7 +12,10 @@
     "serve:status": "if [ -f .pid ] && kill -0 $(cat .pid) 2>/dev/null; then echo \"running (PID: $(cat .pid))\"; else echo 'not running'; fi",
     "serve:log": "tail -f server.log",
     "serve:install": "sudo cp openclaw.service /etc/systemd/system/ && sudo systemctl daemon-reload && sudo systemctl enable openclaw && echo 'systemd enabled'",
-    "serve:uninstall": "sudo systemctl disable openclaw && sudo rm /etc/systemd/system/openclaw.service && sudo systemctl daemon-reload && echo 'systemd disabled'"
+    "serve:uninstall": "sudo systemctl disable openclaw && sudo rm /etc/systemd/system/openclaw.service && sudo systemctl daemon-reload && echo 'systemd disabled'",
+    "test": "vitest run",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@mi-gpt/utils": "1.1.1",
@@ -25,7 +28,8 @@
     "@types/node": "^22.13.11",
     "@types/ws": "^8.18.1",
     "tsx": "^4.19.3",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "vitest": "^4.0.18"
   },
   "packageManager": "pnpm@9.15.9",
   "engines": {

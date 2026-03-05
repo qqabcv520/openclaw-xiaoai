@@ -7,3 +7,4 @@ server.log
 .pid
 *.pcm
 tmp/
+/.idea/
