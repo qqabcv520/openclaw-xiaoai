@@ -2,9 +2,6 @@ import { randomUUID } from "node:crypto";
 import { OpenXiaoAIProtocol } from "./open-xiaoai.js";
 import { OpenXiaoAISpeaker } from "./speaker.js";
 import { UnifiedGateway } from "./gateway.js";
-import { LocalHandler } from "./local-handler.js";
-import { HomeAssistantController } from "./ha-controller.js";
-import { HomeAssistantMonitor } from "./ha-monitor.js";
 import { KwsService } from "./kws.js";
 import { TtsService } from "./tts.js";
 import { NotificationServer } from "./notification-server.js";
@@ -26,7 +23,6 @@ export class XiaoAiApp {
   private kwsResumeTimer: NodeJS.Timeout | null = null;
   private jarvisArmed = false;
   private jarvisArmedAt = 0;
-  private jarvisFallbackSuppressUntil = 0;
   private lastHandledAsr: {
     wakeWord: WakeWord;
     text: string;
@@ -38,13 +34,7 @@ export class XiaoAiApp {
   constructor(config: AppConfig) {
     this.config = config;
 
-    const haController = new HomeAssistantController(config.ha);
-    const localHandler = new LocalHandler(config, haController);
-
-    this.gateway = new UnifiedGateway({
-      config,
-      localHandler,
-    });
+    this.gateway = new UnifiedGateway({ config });
 
     this.notificationServer = new NotificationServer(
       config.notification,
@@ -76,11 +66,6 @@ export class XiaoAiApp {
     if (!this.ttsEnabled && this.config.tts?.enabled) {
       console.log("Edge TTS 未启用，将使用小爱自带 TTS");
     }
-
-    const haMonitor = new HomeAssistantMonitor(this.config.ha, (event) => {
-      console.log("HA 状态变更", event?.event?.data?.entity_id ?? "");
-    });
-    await haMonitor.start();
 
     console.log("服务已启动...");
     OpenXiaoAIProtocol.registerCommand("get_version", async () => ({
@@ -292,45 +277,29 @@ export class XiaoAiApp {
       if (!text) {
         return;
       }
-      if (
-        wakeWord === "小爱同学" &&
-        now < this.jarvisFallbackSuppressUntil
-      ) {
-        console.log(`忽略贾维斯后的回落识别: ${text}`);
+
+      // 小爱同学路径：不介入，原生管线自然处理
+      if (wakeWord === "小爱同学") {
         return;
       }
+
       if (this.isDuplicateAsrRequest(wakeWord, text, now)) {
         console.log(`忽略重复识别: ${text}`);
         return;
       }
       this.lastHandledAsr = { wakeWord, text, at: now };
-      if (wakeWord === "贾维斯") {
-        this.jarvisFallbackSuppressUntil = now + 2000;
-      }
-      if (wakeWord === "贾维斯" && this.config.xiaoai.abortOnJarvis) {
+      if (this.config.xiaoai.abortOnJarvis) {
         const aborted = await this.speaker.abortXiaoAI();
         if (aborted) {
           await this.sleep(300);
         }
       }
 
-      const result = await this.gateway.handleRequest({
+      await this.gateway.handleRequest({
         wakeWord,
         text,
         source: "asr",
       });
-
-      if (result.forwardToXiaoAI) {
-        await this.speaker.askXiaoAI(text);
-        return;
-      }
-
-      // 贾维斯路径返回空 text（异步 webhook），不需要本地播报
-      if (!result.text) {
-        return;
-      }
-
-      await this.playResponse(result.text);
     } finally {
       this.tryResumeKws();
     }

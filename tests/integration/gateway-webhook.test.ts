@@ -4,17 +4,17 @@ import { UnifiedGateway } from "@/gateway.js";
 import type { AppConfig } from "@/types.js";
 
 /**
- * Gateway → webhook 集成测试
- * 启动一个真实的 HTTP 服务器模拟 OpenClaw webhook 端点，
+ * Gateway → Channel Plugin 集成测试
+ * 启动一个真实的 HTTP 服务器模拟 OpenClaw Channel Plugin 入站端点，
  * 验证 Gateway 能正确发送 HTTP 请求。
  */
-describe("Gateway → Webhook 集成测试", () => {
-  let mockWebhookServer: ReturnType<typeof createServer>;
-  let webhookPort: number;
+describe("Gateway → Channel Plugin 集成测试", () => {
+  let mockServer: ReturnType<typeof createServer>;
+  let serverPort: number;
   let gateway: UnifiedGateway;
 
-  // 记录 webhook 收到的请求
-  let webhookRequests: Array<{
+  // 记录服务端收到的请求
+  let receivedRequests: Array<{
     method: string;
     url: string;
     headers: Record<string, string | string[] | undefined>;
@@ -22,10 +22,10 @@ describe("Gateway → Webhook 集成测试", () => {
   }>;
 
   beforeEach(async () => {
-    webhookRequests = [];
+    receivedRequests = [];
 
-    // 启动模拟 webhook 服务器
-    mockWebhookServer = createServer(async (req: IncomingMessage, res: ServerResponse) => {
+    // 启动模拟服务器
+    mockServer = createServer(async (req: IncomingMessage, res: ServerResponse) => {
       const chunks: Buffer[] = [];
       for await (const chunk of req) {
         chunks.push(chunk as Buffer);
@@ -38,7 +38,7 @@ describe("Gateway → Webhook 集成测试", () => {
         body = bodyStr;
       }
 
-      webhookRequests.push({
+      receivedRequests.push({
         method: req.method ?? "",
         url: req.url ?? "",
         headers: req.headers as Record<string, string | string[] | undefined>,
@@ -50,38 +50,28 @@ describe("Gateway → Webhook 集成测试", () => {
     });
 
     await new Promise<void>((resolve) => {
-      mockWebhookServer.listen(0, "127.0.0.1", () => resolve());
+      mockServer.listen(0, "127.0.0.1", () => resolve());
     });
 
-    const addr = mockWebhookServer.address();
-    webhookPort = typeof addr === "object" && addr ? addr.port : 0;
+    const addr = mockServer.address();
+    serverPort = typeof addr === "object" && addr ? addr.port : 0;
 
     const mockConfig = {
-      webhook: {
-        url: `http://127.0.0.1:${webhookPort}/hooks/xiaoai`,
-        token: "webhook-test-token",
+      gateway: {
+        url: `http://127.0.0.1:${serverPort}`,
+        token: "gateway-test-token",
         timeoutMs: 5000,
-      },
-      local: {
-        forwardToXiaoAIOnFallback: false,
       },
     } as AppConfig;
 
-    const mockLocalHandler = {
-      process: async () => ({ handled: false, text: "" }),
-    };
-
-    gateway = new UnifiedGateway({
-      config: mockConfig,
-      localHandler: mockLocalHandler as any,
-    });
+    gateway = new UnifiedGateway({ config: mockConfig });
   });
 
   afterEach(() => {
-    mockWebhookServer?.close();
+    mockServer?.close();
   });
 
-  it("贾维斯唤醒词发送正确的 webhook 请求", async () => {
+  it("贾维斯唤醒词发送正确的 channel inbound 请求", async () => {
     const result = await gateway.handleRequest({
       wakeWord: "贾维斯",
       text: "今天天气怎么样",
@@ -92,74 +82,58 @@ describe("Gateway → Webhook 集成测试", () => {
     expect(result.handler).toBe("openclaw");
     expect(result.text).toBe("");
 
-    // 验证 webhook 收到了正确的请求
-    expect(webhookRequests).toHaveLength(1);
-    const req = webhookRequests[0]!;
+    // 验证收到了正确的请求
+    expect(receivedRequests).toHaveLength(1);
+    const req = receivedRequests[0]!;
     expect(req.method).toBe("POST");
-    expect(req.url).toBe("/hooks/xiaoai");
-    expect(req.headers["x-openclaw-token"]).toBe("webhook-test-token");
+    expect(req.url).toBe("/channels/xiaoai/inbound");
+    expect(req.headers["x-openclaw-token"]).toBe("gateway-test-token");
     expect(req.headers["content-type"]).toBe("application/json");
     expect(req.body).toEqual({
       message: "今天天气怎么样",
-      name: "XiaoAi",
-      sessionKey: "hook:xiaoai",
-      deliver: true,
-      channel: "xiaoai",
     });
   });
 
-  it("webhook 请求包含正确的认证 token", async () => {
+  it("请求包含正确的认证 token", async () => {
     await gateway.handleRequest({
       wakeWord: "贾维斯",
       text: "测试认证",
       source: "asr",
     });
 
-    expect(webhookRequests).toHaveLength(1);
-    expect(webhookRequests[0]!.headers["x-openclaw-token"]).toBe("webhook-test-token");
-  });
-
-  it("小爱同学唤醒词不发送 webhook 请求", async () => {
-    await gateway.handleRequest({
-      wakeWord: "小爱同学",
-      text: "你好",
-      source: "asr",
-    });
-
-    expect(webhookRequests).toHaveLength(0);
+    expect(receivedRequests).toHaveLength(1);
+    expect(receivedRequests[0]!.headers["x-openclaw-token"]).toBe("gateway-test-token");
   });
 });
 
-describe("Gateway → Webhook 异常场景", () => {
-  let mockWebhookServer: ReturnType<typeof createServer>;
-  let webhookPort: number;
+describe("Gateway → Channel Plugin 异常场景", () => {
+  let mockServer: ReturnType<typeof createServer>;
+  let serverPort: number;
 
   afterEach(() => {
-    mockWebhookServer?.close();
+    mockServer?.close();
   });
 
-  it("webhook 返回非 200 时 Gateway 不抛异常", async () => {
+  it("服务端返回非 200 时 Gateway 不抛异常", async () => {
     // 启动返回 500 的服务器
-    mockWebhookServer = createServer((_req, res) => {
+    mockServer = createServer((_req, res) => {
       res.writeHead(500);
       res.end("Internal Server Error");
     });
     await new Promise<void>((resolve) => {
-      mockWebhookServer.listen(0, "127.0.0.1", () => resolve());
+      mockServer.listen(0, "127.0.0.1", () => resolve());
     });
-    const addr = mockWebhookServer.address();
-    webhookPort = typeof addr === "object" && addr ? addr.port : 0;
+    const addr = mockServer.address();
+    serverPort = typeof addr === "object" && addr ? addr.port : 0;
 
     const gateway = new UnifiedGateway({
       config: {
-        webhook: {
-          url: `http://127.0.0.1:${webhookPort}/hooks/xiaoai`,
+        gateway: {
+          url: `http://127.0.0.1:${serverPort}`,
           token: "test",
           timeoutMs: 5000,
         },
-        local: { forwardToXiaoAIOnFallback: false },
       } as AppConfig,
-      localHandler: { process: async () => ({ handled: false, text: "" }) } as any,
     });
 
     // 不应抛异常
@@ -172,17 +146,15 @@ describe("Gateway → Webhook 异常场景", () => {
     expect(result.handler).toBe("openclaw");
   });
 
-  it("webhook 连接不上时 Gateway 不抛异常", async () => {
+  it("连接不上时 Gateway 不抛异常", async () => {
     const gateway = new UnifiedGateway({
       config: {
-        webhook: {
-          url: "http://127.0.0.1:1/hooks/xiaoai",
+        gateway: {
+          url: "http://127.0.0.1:1",
           token: "test",
           timeoutMs: 2000,
         },
-        local: { forwardToXiaoAIOnFallback: false },
       } as AppConfig,
-      localHandler: { process: async () => ({ handled: false, text: "" }) } as any,
     });
 
     // 连接拒绝不应抛异常

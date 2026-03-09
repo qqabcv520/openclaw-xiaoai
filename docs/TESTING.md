@@ -33,7 +33,6 @@
 tests/
 ├── unit/                    # 单元测试
 │   ├── gateway.test.ts
-│   ├── local-handler.test.ts
 │   ├── notification-server.test.ts
 │   ├── tts.test.ts
 │   ├── kws.test.ts
@@ -42,7 +41,8 @@ tests/
 │       └── types.test.ts
 └── integration/             # 集成测试
     ├── notification-flow.test.ts
-    └── gateway-webhook.test.ts
+    ├── gateway-webhook.test.ts
+    └── e2e-flow.test.ts
 ```
 
 - 位置：`tests/unit/` 和 `tests/integration/`
@@ -65,7 +65,6 @@ tests/
 |----------|--------|---------|------|
 | `src/protocol/codec.ts` | 90%+ | 单元 | 纯编解码函数 |
 | `src/gateway.ts` | 80%+ | 单元 | 路由逻辑，mock webhook |
-| `src/local-handler.ts` | 80%+ | 单元 | 指令解析，mock HA |
 | `src/notification-server.ts` | 80%+ | 集成 | HTTP 端点测试 |
 | `src/tts.ts` | 70%+ | 单元 | mock edge-tts |
 | `plugin/index.ts` | 80%+ | 单元 | mock fetch |

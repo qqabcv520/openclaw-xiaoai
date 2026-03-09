@@ -1,9 +1,9 @@
 export type WakeWord = "小爱同学" | "贾维斯";
 
-export interface WebhookConfig {
-  /** OpenClaw Gateway webhook URL，如 http://localhost:18789/hooks/xiaoai */
+export interface GatewayConfig {
+  /** OpenClaw Gateway 基础 URL，如 http://localhost:18789 */
   url: string;
-  /** webhook 认证 token */
+  /** 认证 token */
   token: string;
   /** 请求超时毫秒 */
   timeoutMs: number;
@@ -18,24 +18,9 @@ export interface NotificationConfig {
   token: string;
 }
 
-export interface HomeAssistantConfig {
-  baseURL: string;
-  token: string;
-}
-
 export interface WakeupConfig {
   jarvisKeywords: string[];
   jarvisHoldMs: number;
-}
-
-export interface DeviceConfig {
-  lights: Record<string, string>;
-  switches: Record<string, string>;
-  climates: Record<string, string>;
-}
-
-export interface LocalConfig {
-  forwardToXiaoAIOnFallback: boolean;
 }
 
 export interface XiaoAIConfig {
@@ -64,12 +49,9 @@ export interface TtsConfig {
 }
 
 export interface AppConfig {
-  webhook: WebhookConfig;
+  gateway: GatewayConfig;
   notification: NotificationConfig;
-  ha: HomeAssistantConfig;
   wakeup: WakeupConfig;
-  devices: DeviceConfig;
-  local: LocalConfig;
   xiaoai: XiaoAIConfig;
   kws?: KwsConfig;
   tts?: TtsConfig;

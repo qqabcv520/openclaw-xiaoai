@@ -5,7 +5,7 @@
 
 ## 项目概述
 
-小爱音箱 Pro (LX06) 与 OpenClaw AI 助手框架的双向语音桥接服务 + Channel Plugin。桥接服务运行在 NAS 上，通过 WebSocket 连接小爱音箱，通过 HTTP webhook/notification 与 OpenClaw 通信。
+小爱音箱 Pro (LX06) 与 OpenClaw AI 助手框架的双向语音桥接服务 + Channel Plugin。桥接服务运行在 NAS 上，通过 WebSocket 连接小爱音箱，通过 Channel Plugin HTTP 端点与 OpenClaw 通信（入站：POST /channels/xiaoai/inbound，出站：Plugin deliver → POST :4400/notify）。
 
 ## 核心开发流程 (必须严格遵循)
 
@@ -79,7 +79,6 @@ pnpm test                  # 测试，必须全部通过
 - 通信：ws (WebSocket), node:http
 - TTS：node-edge-tts (Edge TTS)
 - KWS：sherpa-onnx-node (语音唤醒词检测)
-- 智能家居：Home Assistant REST API + WebSocket
 - 工具：@mi-gpt/utils
 - 测试：vitest
 - 包管理器：pnpm
@@ -95,12 +94,9 @@ openclaw-xiaoai/
 │   ├── xiaoai-app.ts            # 主应用
 │   ├── gateway.ts               # 路由网关
 │   ├── notification-server.ts   # HTTP 通知服务 (:4400)
-│   ├── local-handler.ts         # 本地指令处理
 │   ├── speaker.ts               # 音箱控制
 │   ├── tts.ts                   # Edge TTS
 │   ├── kws.ts                   # 唤醒词检测
-│   ├── ha-controller.ts         # HA REST 控制
-│   ├── ha-monitor.ts            # HA WebSocket 监控
 │   ├── open-xiaoai.ts           # 协议封装
 │   ├── types.ts                 # 类型定义
 │   └── protocol/                # WebSocket 协议层

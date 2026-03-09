@@ -1,24 +1,4 @@
 {
-  "hooks": {
-    "enabled": true,
-    "token": "your-webhook-token-here",
-    "path": "/hooks",
-    "defaultSessionKey": "hook:xiaoai",
-    "allowRequestSessionKey": true,
-    "allowedSessionKeyPrefixes": ["hook:xiaoai"],
-    "mappings": [
-      {
-        "match": { "path": "xiaoai" },
-        "action": "agent",
-        "agentId": "main",
-        "wakeMode": "now",
-        "name": "XiaoAi",
-        "messageTemplate": "{{message}}",
-        "deliver": true,
-        "channel": "xiaoai"
-      }
-    ]
-  },
   "channels": {
     "xiaoai": {
       "accounts": {
